@@ -15,7 +15,6 @@ int main()
 	int round=0;			//加密单位数（从低位加密计算，以word（2个Byte）为单位）
 	int key_input=0;
 	char text[2048];	//输入原文缓冲区
-	int tmp[2048];
 	int	KEY[4];			//输入密钥4组4bit
 	int padNum=0;		//填充位数（4bit为1个单位）
 	int charNum=0;		//输入原文位数（4bit为1个单位）
@@ -24,21 +23,9 @@ int main()
 	int Z[2048];
 	int code[2048];		//生成的密文
 
-	printf("please input the plain text(16bit,in terms of hex): ");
+	//输入明文
+	printf("please input the plain text(16bit,in terms of hex):\n");
 	printf("example:if u want to encrypt \"0x12345\", please input 12345 \n");
-	#if 0
-	int plaintext;
-	plaintext= 0x2542;
-	printf("text: %x\n", plaintext);
-
-	//将16bit的key_input分成四组4bit数据，然后赋值给KEY[i]
-	for(i=0; i<4; i++)
-	{
-		plain[i]=( plaintext>>(4*i) )& 0x0f;
-		printf("plain[%d] = %x \n", i, plain[i]);
-	}
-	one_word_encrypt(KEY, plain, code, Z);
-	#endif
 	//原文输入读作字符串后进行转换
 	fgets (text, 256, stdin);
 	i=0;
@@ -50,22 +37,23 @@ int main()
 	printf("charNum = %d\n", charNum);
 	printf("text: %s\n", text);
 
-	printf("please input the key(16bit, in terms of hex): ");
+	//输入密钥
+	printf("please input the key(16bit, in terms of hex):\n");
 	printf("example:if u want to using key \"0x1234\", please input 1234 \n");
 	scanf("%x", &key_input);
 	key_input= 0x1234;
 	printf("key: %x\n", key_input);
-
 	//将16bit的key_input分成四组4bit数据，然后赋值给KEY[i]
 	for(i=0; i<4; i++)
 	{
 		KEY[i]=( key_input>>(4*i) )& 0x0f;
-		printf("key[%d] = %x \n", i, KEY[i]);
+		//printf("key[%d] = %x \n", i, KEY[i]);
 	}
-	printf("please input the number of encrypt words(integer): ");
-	//scanf("%d",&round);
+
+	//输入加密轮数
+	printf("\nplease input the number of encrypt words(integer,if enter 0 means encypte all words): ");
+	scanf("%d",&round);
 	printf("encrypt the last %d words\n", round);
-	round =1;
 
 	
 	if(charNum %4)
@@ -77,13 +65,14 @@ int main()
 		padNum=0;
 	}
 	totalNum = charNum + padNum;
-	printf("padNum %d totalNum %d\n", padNum, totalNum);
+	printf("padNum %d, totalNum %d\n", padNum, totalNum);
 	//将16进制输入的text字符串分成四组4bit数据(两个word)，
 	//如果不够，高位需补足添零。然后赋值给plain[i]
 	//清零初始化
 	for(i=0; i<2048; i++)
 	{
 		plain[i]=0;
+		code[i]=0;
 	}
 	//高位补零操作
 	j=0;
@@ -96,31 +85,26 @@ int main()
 	{
 		plain[j]=0;
 	}
-#if 0
-	// 补零，将字符串转换为数字
-	for(i=0; i<padNum; i++)
-	{
-		plain[i]= 0;
-	}
-	j=0;
-	for(i=padNum; i<totalNum; i++)
-	{
-		plain[i]= atoh(text[j]);
-		j++;
-	}
-#endif
 	
+#if 0
 	for(i=0; i< totalNum; i++)
 	{
 		printf("plain[%d] = %x \n", i, plain[i]);
 	}
+#endif
 	
 	if(round==0 || round>totalNum/4)
 	{
 		round = totalNum/4;
 	}
-	word_encrypt(round, KEY, plain, code, Z);
 
+	word_encrypt(round, KEY, plain, code, Z);
+	printf("test:\n");
+
+	for(i=totalNum-1; i>=0; i--)
+	{
+		printf("%x", code[i]);
+	}
 	return 0;
 }
 
@@ -132,7 +116,7 @@ int word_encrypt(int roundNum, int *KEY, int *plain, int *code, int *Z)
 	int round;
 	for(round=0; round< roundNum; round++)
 	{
-		one_word_encrypt(KEY, plain+4*round, code, Z);
+		one_word_encrypt(KEY, plain+4*round, code+4*round, Z);
 	}
 
 	return 0;
@@ -175,7 +159,6 @@ int one_word_encrypt(int *KEY, int *plain, int *code, int *Z)
 int initial(int *S, int *KEY)
 {
 	int i,j;
-	int tmp;
 
 
 	for(i=0; i<4; i++)
@@ -191,12 +174,14 @@ int initial(int *S, int *KEY)
 		swap(&S[i] , &S[j]);
 	}
 
+#if 0
 	printf("after initial\n");
 	for(i=0; i<4; i++)
 	{
 		printf("S[%d]= %x ", i, S[i]);
 	}
 	printf("\n");
+#endif
 
 	
 	return 0;
@@ -233,9 +218,9 @@ int generate_key_stream(int *S, int *Z, int *plain, int *code)
 	for(i=0; i<4; i++)
 	{
 		code[i] = encryption(plain[i], Z[i]);
-		printf("code[%d]= %x ", k, code[k]);
 	}
 
+#if 0
 	printf("after generate \n");
 	for(i=0; i<4; i++)
 	{
@@ -243,6 +228,7 @@ int generate_key_stream(int *S, int *Z, int *plain, int *code)
 		printf("Z[%d]= %x ", i, Z[i]);
 	}
 	printf("\n");
+#endif
 
 	return 0;
 }
