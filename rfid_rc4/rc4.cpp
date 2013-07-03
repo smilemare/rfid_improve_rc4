@@ -188,6 +188,8 @@ int initial(int *S, int *KEY)
 }
 
 //密码流生成函数
+//输入：S序列，plain原文
+//输出：Z序列，code密文
 int generate_key_stream(int *S, int *Z, int *plain, int *code)
 {
 	int i,j,k;
@@ -261,6 +263,7 @@ int atoh(char a)
 
 	return retVal;
 }
+
 //swap 函数
 void swap(int *a, int *b)
 {
